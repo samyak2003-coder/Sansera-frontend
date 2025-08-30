@@ -29,14 +29,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <SidebarProvider>
-            <Navbar />
-            <div className="pt-16">
-              <AppSidebar />
-              {children}
-            </div>
-          </SidebarProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <SidebarProvider>
+          <Navbar/>
+            <AppSidebar/>
+            {children}
+        </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>

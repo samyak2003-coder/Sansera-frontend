@@ -1,8 +1,12 @@
+'use client';
+import { Typewriter } from "@/components/ui/type-writer";
+
 export default function Page() {
   return (
-    <main className="p-4">
-      <h1 className="text-xl font-semibold">Welcome</h1>
-      <p className="text-muted-foreground">Your app is set up. Use the sidebar to navigate.</p>
-    </main>
+<div className="min-h-screen w-full flex items-center justify-center">
+  <Typewriter text={TEXT} />
+</div>
   )
 }
+
+const TEXT = "Welcome to the Cost Estimation Tool for Sansera Industries. Project carried out by Samyak, Rayaan, Adityaa, Shreevardhan from PES University."
