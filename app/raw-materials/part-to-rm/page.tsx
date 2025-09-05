@@ -44,7 +44,7 @@ export default function PartToRMPage() {
 
       if (form.thicknessWidth === "") {
         // 2D case
-        const res1 = await fetch("http://localhost:5000/rm/part-rm/2d_xgb_lgf", {
+        const res1 = await fetch("https://sansera-backend.onrender.com/rm/part-rm/2d_xgb_lgf", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -56,7 +56,7 @@ export default function PartToRMPage() {
         const data1 = await res1.json()
         results["L/GF"] = data1
 
-        const res2 = await fetch("http://localhost:5000/rm/part-rm/2d_lr_wd", {
+        const res2 = await fetch("https://sansera-backend.onrender.com/rm/part-rm/2d_lr_wd", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ "W/D_P": parseFloat(form.widthDia) }),
@@ -65,7 +65,7 @@ export default function PartToRMPage() {
         results["W/D"] = data2
       } else {
         // 3D case
-        const res1 = await fetch("http://localhost:5000/rm/part-rm/3d_lr_lgf", {
+        const res1 = await fetch("https://sansera-backend.onrender.com/rm/part-rm/3d_lr_lgf", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ "L/GF_P": parseFloat(form.length) }),
@@ -73,7 +73,7 @@ export default function PartToRMPage() {
         const data1 = await res1.json()
         results["L/GF"] = data1
 
-        const res2 = await fetch("http://localhost:5000/rm/part-rm/3d_lr_wd", {
+        const res2 = await fetch("https://sansera-backend.onrender.com/rm/part-rm/3d_lr_wd", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ "W/D_P": parseFloat(form.widthDia) }),
@@ -81,7 +81,7 @@ export default function PartToRMPage() {
         const data2 = await res2.json()
         results["W/D"] = data2
 
-        const res3 = await fetch("http://localhost:5000/rm/part-rm/3d_lr_twt", {
+        const res3 = await fetch("https://sansera-backend.onrender.com/rm/part-rm/3d_lr_twt", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ "T/WT_P": parseFloat(form.thicknessWidth) }),

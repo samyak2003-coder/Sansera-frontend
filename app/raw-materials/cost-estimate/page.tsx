@@ -169,7 +169,7 @@ const [predictions, setPredictions] = useState<Record<string, PredictionValue>>(
 
       if (form.thicknessWidth === "") {
         // 2D case
-        const res1 = await fetch("http://localhost:5000/rm/cost/2d_cost_estimate", {
+        const res1 = await fetch("https://sansera-backend.onrender.com/rm/cost/2d_cost_estimate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -187,7 +187,7 @@ const [predictions, setPredictions] = useState<Record<string, PredictionValue>>(
         results["Cost in $ for 2D Part"] = data1
       } else {
         // 3D case
-        const res2 = await fetch("http://localhost:5000/rm/cost/3d_cost_estimate", {
+        const res2 = await fetch("https://sansera-backend.onrender.com/rm/cost/3d_cost_estimate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
