@@ -104,7 +104,7 @@ export default function PartToRMPage() {
         <CardHeader>
           <CardTitle className="text-pretty text-center">Part to Raw Material</CardTitle>
           <CardDescription className="text-pretty">
-            Enter the following values as floating numbers. Leave L/GF_P blank for parts with Diameter and Thickness only.
+            Enter the following values as floating numbers. Leave T/WT_P blank for parts with Diameter and Thickness only.
           </CardDescription>
         </CardHeader>
 
@@ -128,6 +128,9 @@ export default function PartToRMPage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="thicknessWidth">Part Thickness/Width (T/WT_P)</Label>
+              <span className="text-xs text-muted-foreground">
+                  Leave blank for parts with Diameter and Thickness
+                </span>
               <Input id="thicknessWidth" name="thicknessWidth" type="number" value={form.thicknessWidth} onChange={handleChange} />
             </div>
             <div className="flex justify-center pt-2">
