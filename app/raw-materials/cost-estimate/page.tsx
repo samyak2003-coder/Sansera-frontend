@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { usePrediction } from "@/context/RM-Context"
 import {   
   Select,
   SelectContent,
@@ -131,185 +132,268 @@ const ALLOY_OPTIONS = [
 const FORM_OPTIONS = ["PLATE", "RND", "FLAT", "BAR", "SHT", "BOP", "ROD", "EXT"]
 
 export default function CostEstimatorPage() {
-  // Preserve any existing state; adding controlled state for new selects if not present.
-  const [spec, setSpec] = useState<string>("")
-  const [alloy, setAlloy] = useState<string>("")
-  const [form, setForm] = useState<string>("")
-
-  // If your page already tracks these numeric fields, keep your state.
-  // Ensure they are strings so empty -> "" can be coerced to 0/0.0 on submit.
-  const [partsPerBlock, setPartsPerBlock] = useState<string>("")
-  const [part, setPart] = useState<string>("")
-  const [widthOrDia, setWidthOrDia] = useState<string>("")
-  const [length, setLength] = useState<string>("")
-  const [thicknessOrWidth, setThicknessOrWidth] = useState<string>("")
+  const [form, setForm] = useState({
+    spec: "",
+    form: "",
+    alloy: "",
+    partsPerBlock: "",
+    part: "",
+    annual: "",
+    widthDia: "",
+    length: "",
+    thicknessWidth: "",
+  })
+  const [predictions, setPredictions] = useState<Record<string, any>>({})
+  const [errors, setErrors] = useState<{ [k: string]: string }>({})
+  const [isLoading, setLoading] = useState<boolean>(false)
 
   function toFloat(value: string) {
-    if (value === "" || value == null) return 0.0
+    if (!value) return 0.0
     const n = Number(value)
     return Number.isFinite(n) ? n : 0.0
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    // Coerce empty numeric inputs to 0.0 by default. If you need integer 0 specifically for any field, use Math.trunc.
-    const payload = {
-      spec: spec || "", // default to empty string if not chosen
-      alloy: alloy || "",
-      form: form || "",
-      partsPerBlock: toFloat(partsPerBlock), // 0.0 if empty/non-numeric
-      part: toFloat(part),
-      widthOrDia: toFloat(widthOrDia),
-      length: toFloat(length), // allow 0.0 when left blank
-      thicknessOrWidth: toFloat(thicknessOrWidth),
-    }
+    setLoading(true)
+    setErrors({})
 
-    // TODO: Replace with your actual calculation or API call
-    console.log("[v0] Cost Estimator submit:", payload)
-    // alert(JSON.stringify(payload, null, 2))
+    try {
+      const results: Record<string, any> = {}
+
+      if (form.thicknessWidth === "") {
+        // 2D case
+        const res1 = await fetch("http://localhost:5000/rm/cost/2d_cost_estimate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            "Specification": form.spec,
+            "Form": form.form,
+            "Alloy": form.alloy,
+            "Parts/Block": toFloat(form.partsPerBlock),
+            "W/D": toFloat(form.widthDia),
+            "L/GF": toFloat(form.length),
+            "Part": toFloat(form.part),
+            "Annual": toFloat(form.annual),
+          }),
+        })
+        const data1 = await res1.json()
+        results["Cost in $ for 2D Part"] = data1
+      } else {
+        // 3D case
+        const res2 = await fetch("http://localhost:5000/rm/cost/3d_cost_estimate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            "Specification": form.spec,
+            "Form": form.form,
+            "Alloy": form.alloy,
+            "W/D": toFloat(form.widthDia),
+            "L/GF": toFloat(form.length),
+            "Part": toFloat(form.part),
+            "T/WT": toFloat(form.thicknessWidth),
+            "Annual": toFloat(form.annual),
+          }),
+        })
+        const data2 = await res2.json()
+        results["Cost in $ for 3D Part"] = data2
+      }
+
+      setPredictions(results)
+    } catch (err) {
+      console.error("Error submitting:", err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen w-screen p-4 md:p-6 flex items-center justify-center">
-        <Card className="mx-auto">
-          <CardHeader>
-            <CardTitle className="text-pretty">Cost Estimator</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Numeric inputs */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="ppb">Parts/Block</Label>
-                <Input
-                  id="ppb"
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  value={partsPerBlock}
-                  onChange={(e) => setPartsPerBlock(e.target.value)}
-                  placeholder="0"
-                />
-              </div>
+      <Card className="mx-auto">
+        <CardHeader>
+          <CardTitle className="text-pretty">Cost Estimator</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Parts per block */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="ppb">Parts/Block</Label>
+              <Input
+                id="ppb"
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={form.partsPerBlock}
+                onChange={(e) => setForm(prev => ({ ...prev, partsPerBlock: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="part">Part</Label>
-                <Input
-                  id="part"
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  value={part}
-                  onChange={(e) => setPart(e.target.value)}
-                  placeholder="0"
-                />
-              </div>
+            {/* Part */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="part">Part</Label>
+              <Input
+                id="part"
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={form.part}
+                onChange={(e) => setForm(prev => ({ ...prev, part: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="widthOrDia">Part Width/Dia (W/T_P)</Label>
-                <Input
-                  id="widthOrDia"
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  value={widthOrDia}
-                  onChange={(e) => setWidthOrDia(e.target.value)}
-                  placeholder="0.0"
-                />
-              </div>
+            {/* Annual */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="annual">Annual</Label>
+              <Input
+                id="annual"
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={form.annual}
+                onChange={(e) => setForm(prev => ({ ...prev, annual: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
 
-              <div className="flex flex-col gap-2 sm:col-span-1">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="length">Part Length (L/GF_P)</Label>
-                  <span className="text-xs text-muted-foreground">
-                    Leave blank for parts with Diameter and Thickness
-                  </span>
-                </div>
-                <Input
-                  id="length"
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  value={length}
-                  onChange={(e) => setLength(e.target.value)}
-                  placeholder="0.0"
-                />
-              </div>
+            {/* Width/Dia */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="widthDia">RM Width/Dia (W/T)</Label>
+              <Input
+                id="widthDia"
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={form.widthDia}
+                onChange={(e) => setForm(prev => ({ ...prev, widthDia: e.target.value }))}
+                placeholder="0.0"
+              />
+            </div>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="thicknessOrWidth">Part Thickness/Width (T/WT_P)</Label>
-                <Input
-                  id="thicknessOrWidth"
-                  type="number"
-                  inputMode="decimal"
-                  step="any"
-                  value={thicknessOrWidth}
-                  onChange={(e) => setThicknessOrWidth(e.target.value)}
-                  placeholder="0.0"
-                />
+            {/* Length */}
+            <div className="flex flex-col gap-2 sm:col-span-1">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="length">RM Length (L/GF)</Label>
               </div>
+              <Input
+                id="length"
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={form.length}
+                onChange={(e) => setForm(prev => ({ ...prev, length: e.target.value }))}
+                placeholder="0.0"
+              />
+            </div>
 
-                  {/* Selects: Spec, Alloy, Form */}
-                  <div className="flex flex-col gap-2">
-                <Label htmlFor="spec">Spec</Label>
-                <Select value={spec} onValueChange={setSpec}>
-                  <SelectTrigger id="spec">
-                    <SelectValue placeholder="Select Spec" />
-                  </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-64 overflow-y-auto overscroll-contain z-[60]">
-                    {SPEC_OPTIONS.map((opt) => (
-                      <SelectItem key={opt} value={opt}>
-                        {opt}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Thickness/Width */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="thicknessWidth">RM Thickness/Width (T/WT)</Label>
+               <span className="text-xs text-muted-foreground">
+                  Leave blank for parts with Diameter and Thickness
+                </span>
+              <Input
+                id="thicknessWidth"
+                type="number"
+                inputMode="decimal"
+                step="any"
+                value={form.thicknessWidth}
+                onChange={(e) => setForm(prev => ({ ...prev, thicknessWidth: e.target.value }))}
+                placeholder="0.0"
+              />
+            </div>
+
+            {/* Spec */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="spec">Spec</Label>
+              <Select
+                value={form.spec}
+                onValueChange={(val) => setForm(prev => ({ ...prev, spec: val }))}
+              >
+                <SelectTrigger id="spec">
+                  <SelectValue placeholder="Select Spec" />
+                </SelectTrigger>
+                <SelectContent className="max-h-64 overflow-y-auto overscroll-contain z-[60]">
+                  {SPEC_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Alloy */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="alloy">Alloy</Label>
+              <Select
+                value={form.alloy}
+                onValueChange={(val) => setForm(prev => ({ ...prev, alloy: val }))}
+              >
+                <SelectTrigger id="alloy">
+                  <SelectValue placeholder="Select Alloy" />
+                </SelectTrigger>
+                <SelectContent className="max-h-64 overflow-y-auto overscroll-contain z-[60]">
+                  {ALLOY_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Form */}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="form">Form</Label>
+              <Select
+                value={form.form}
+                onValueChange={(val) => setForm(prev => ({ ...prev, form: val }))}
+              >
+                <SelectTrigger id="form">
+                  <SelectValue placeholder="Select Form" />
+                </SelectTrigger>
+                <SelectContent className="max-h-64 overflow-y-auto overscroll-contain z-[60]">
+                  {FORM_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Submit */}
+            <div className="sm:col-span-2">
+              <div className="flex justify-center">
+                <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
+                  {isLoading ? "Loading..." : "Submit"}
+                </Button>
               </div>
+            </div>
+          </form>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="alloy">Alloy</Label>
-                <Select value={alloy} onValueChange={setAlloy}>
-                  <SelectTrigger id="alloy">
-                    <SelectValue placeholder="Select Alloy" />
-                  </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-64 overflow-y-auto overscroll-contain z-[60]">
-                    {ALLOY_OPTIONS.map((opt) => (
-                      <SelectItem key={opt} value={opt}>
-                        {opt}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="form">Form</Label>
-                <Select value={form} onValueChange={setForm}>
-                  <SelectTrigger id="form">
-                    <SelectValue placeholder="Select Form" />
-                  </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-64 overflow-y-auto overscroll-contain z-[60]">
-                    {FORM_OPTIONS.map((opt) => (
-                      <SelectItem key={opt} value={opt}>
-                        {opt}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-
-              {/* Submit centered across the card */}
-              <div className="sm:col-span-2">
-                <div className="flex justify-center">
-                  <Button type="submit" className="w-full sm:w-auto">
-                    Submit
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </CardContent>
-          <CardFooter className="justify-between"></CardFooter>
-        </Card>
-      </div>
+          {Object.keys(predictions).length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-lg font-semibold mb-2">Predictions</h2>
+              <ul className="space-y-1">
+                {Object.entries(predictions).map(([key, val]) => {
+                  const pred = Array.isArray(val.prediction)
+                    ? val.prediction[0]
+                    : val.prediction ?? val
+                  return (
+                    <li key={key} className="text-sm">
+                      <strong>{key}:</strong> {pred}
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter />
+      </Card>
+    </div>
   )
 }

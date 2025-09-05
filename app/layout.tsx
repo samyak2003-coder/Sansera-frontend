@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/Sidebar/AppSidebar"
 import { Geist, Geist_Mono } from "next/font/google"
 import Navbar from "@/components/Navbar/Navbar"
+import { PredictionProvider } from "@/context/RM-Context"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -33,7 +34,9 @@ export default function RootLayout({
         <SidebarProvider>
           <Navbar/>
             <AppSidebar/>
+            <PredictionProvider>
             {children}
+            </PredictionProvider>
         </SidebarProvider>
         </ThemeProvider>
       </body>
