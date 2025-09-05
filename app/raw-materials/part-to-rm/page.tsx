@@ -1,20 +1,28 @@
 "use client"
-
-import * as React from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { usePrediction } from "@/context/RM-Context"
 
 export default function PartToRMPage() {
-  const { form, setForm, predictions, setPredictions } = usePrediction()
-  const [errors, setErrors] = React.useState<{ [k: string]: string }>({})
-  const [isLoading, setLoading] = React.useState<boolean>(false)
+  const [form, setForm] = useState({
+    partsPerBlock: "",
+    part: "",
+    widthDia: "",
+    length: "",
+    thicknessWidth: "",
+  })
+  type PredictionValue = {
+      prediction?: string | number | (string | number)[]
+      [key: string]: unknown
+}
+   const [predictions, setPredictions] = useState<Record<string, PredictionValue>>({})
+  const [isLoading, setLoading] = useState(false)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
   function customRound(x: number): number {
@@ -30,10 +38,9 @@ export default function PartToRMPage() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    setErrors({})
 
     try {
-      const results: Record<string, any> = {}
+      const results: Record<string, PredictionValue> = {}
 
       if (form.thicknessWidth === "") {
         // 2D case
@@ -103,46 +110,39 @@ export default function PartToRMPage() {
 
         <CardContent>
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            {/* Form fields (same as before, now using context form state) */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="partsPerBlock">Parts/Block</Label>
               <Input id="partsPerBlock" name="partsPerBlock" type="number" value={form.partsPerBlock} onChange={handleChange} />
             </div>
-
             <div className="flex flex-col gap-2">
               <Label htmlFor="part">Part</Label>
               <Input id="part" name="part" type="number" value={form.part} onChange={handleChange} />
             </div>
-
             <div className="flex flex-col gap-2">
               <Label htmlFor="widthDia">Part Width/Dia (W/T_P)</Label>
               <Input id="widthDia" name="widthDia" type="number" value={form.widthDia} onChange={handleChange} />
             </div>
-
             <div className="flex flex-col gap-2">
               <Label htmlFor="length">Part Length (L/GF_P)</Label>
               <Input id="length" name="length" type="number" value={form.length} onChange={handleChange} />
             </div>
-
             <div className="flex flex-col gap-2">
               <Label htmlFor="thicknessWidth">Part Thickness/Width (T/WT_P)</Label>
               <Input id="thicknessWidth" name="thicknessWidth" type="number" value={form.thicknessWidth} onChange={handleChange} />
             </div>
-
             <div className="flex justify-center pt-2">
               <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
                 {isLoading ? "Loading..." : "Submit"}
               </Button>
             </div>
           </form>
-
           {Object.keys(predictions).length > 0 && (
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-2">Predictions</h2>
               <ul className="space-y-1">
                 {Object.entries(predictions).map(([key, val]) => {
                   const pred = Array.isArray(val.prediction) ? val.prediction[0] : val.prediction ?? val
-                  const roundedPred = customRound(pred)
+                  const roundedPred = customRound(Number(pred))
                   return (
                     <li key={key} className="text-sm">
                       <strong>{key}:</strong> {roundedPred}

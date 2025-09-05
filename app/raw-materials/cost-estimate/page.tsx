@@ -5,13 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { usePrediction } from "@/context/RM-Context"
 import {   
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue } from "@/components/ui/select"
 
@@ -143,9 +140,14 @@ export default function CostEstimatorPage() {
     length: "",
     thicknessWidth: "",
   })
-  const [predictions, setPredictions] = useState<Record<string, any>>({})
-  const [errors, setErrors] = useState<{ [k: string]: string }>({})
-  const [isLoading, setLoading] = useState<boolean>(false)
+  type PredictionValue = {
+  prediction?: string | number | (string | number)[]
+  [key: string]: unknown
+}
+ 
+const [predictions, setPredictions] = useState<Record<string, PredictionValue>>({})
+  const [isLoading, setLoading] = useState(false)
+
 
   function toFloat(value: string) {
     if (!value) return 0.0
@@ -153,13 +155,17 @@ export default function CostEstimatorPage() {
     return Number.isFinite(n) ? n : 0.0
   }
 
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    setErrors({})
+
 
     try {
-      const results: Record<string, any> = {}
+      type PredictionResult = {
+        [key: string]: unknown
+      }
+     const results: Record<string, PredictionValue> = {}
 
       if (form.thicknessWidth === "") {
         // 2D case
@@ -199,6 +205,7 @@ export default function CostEstimatorPage() {
         results["Cost in $ for 3D Part"] = data2
       }
 
+
       setPredictions(results)
     } catch (err) {
       console.error("Error submitting:", err)
@@ -206,6 +213,7 @@ export default function CostEstimatorPage() {
       setLoading(false)
     }
   }
+
 
   return (
     <div className="min-h-screen w-screen p-4 md:p-6 flex items-center justify-center">
@@ -229,6 +237,7 @@ export default function CostEstimatorPage() {
               />
             </div>
 
+
             {/* Part */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="part">Part</Label>
@@ -242,6 +251,7 @@ export default function CostEstimatorPage() {
                 placeholder="0"
               />
             </div>
+
 
             {/* Annual */}
             <div className="flex flex-col gap-2">
@@ -257,6 +267,7 @@ export default function CostEstimatorPage() {
               />
             </div>
 
+
             {/* Width/Dia */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="widthDia">RM Width/Dia (W/T)</Label>
@@ -270,6 +281,7 @@ export default function CostEstimatorPage() {
                 placeholder="0.0"
               />
             </div>
+
 
             {/* Length */}
             <div className="flex flex-col gap-2 sm:col-span-1">
@@ -287,6 +299,7 @@ export default function CostEstimatorPage() {
               />
             </div>
 
+
             {/* Thickness/Width */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="thicknessWidth">RM Thickness/Width (T/WT)</Label>
@@ -303,6 +316,7 @@ export default function CostEstimatorPage() {
                 placeholder="0.0"
               />
             </div>
+
 
             {/* Spec */}
             <div className="flex flex-col gap-2">
@@ -324,6 +338,7 @@ export default function CostEstimatorPage() {
               </Select>
             </div>
 
+
             {/* Alloy */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="alloy">Alloy</Label>
@@ -343,6 +358,7 @@ export default function CostEstimatorPage() {
                 </SelectContent>
               </Select>
             </div>
+
 
             {/* Form */}
             <div className="flex flex-col gap-2">
@@ -364,6 +380,7 @@ export default function CostEstimatorPage() {
               </Select>
             </div>
 
+
             {/* Submit */}
             <div className="sm:col-span-2">
               <div className="flex justify-center">
@@ -374,14 +391,15 @@ export default function CostEstimatorPage() {
             </div>
           </form>
 
+
           {Object.keys(predictions).length > 0 && (
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-2">Predictions</h2>
               <ul className="space-y-1">
                 {Object.entries(predictions).map(([key, val]) => {
                   const pred = Array.isArray(val.prediction)
-                    ? val.prediction[0]
-                    : val.prediction ?? val
+                  ? val.prediction[0]
+                  : val.prediction ?? JSON.stringify(val)
                   return (
                     <li key={key} className="text-sm">
                       <strong>{key}:</strong> {pred}
