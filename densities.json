@@ -1,0 +1,147 @@
+[
+  {
+    "Matl_Code": "AL",
+    "Alloy": "7075",
+    "Density_kg_m3": 2810
+  },
+  {
+    "Matl_Code": "AL",
+    "Alloy": "6061",
+    "Density_kg_m3": 2700
+  },
+  {
+    "Matl_Code": "AL",
+    "Alloy": "2024",
+    "Density_kg_m3": 2780
+  },
+  {
+    "Matl_Code": "AL",
+    "Alloy": "7040",
+    "Density_kg_m3": 2810
+  },
+  {
+    "Matl_Code": "AL",
+    "Alloy": "7475",
+    "Density_kg_m3": 2810
+  },
+  {
+    "Matl_Code": "AL",
+    "Alloy": "7050",
+    "Density_kg_m3": 2830
+  },
+  {
+    "Matl_Code": "AL",
+    "Alloy": "2219",
+    "Density_kg_m3": 2840
+  },
+  {
+    "Matl_Code": "AL",
+    "Alloy": "2011",
+    "Density_kg_m3": 2830
+  },
+  {
+    "Matl_Code": "AL",
+    "Alloy": "7136",
+    "Density_kg_m3": 2810
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "630",
+    "Density_kg_m3": 7740
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "303",
+    "Density_kg_m3": 7930
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "15-5PH",
+    "Density_kg_m3": 7900
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "13-8MO",
+    "Density_kg_m3": 7800
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "17-4PH",
+    "Density_kg_m3": 7740
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "S153",
+    "Density_kg_m3": 7850
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "S154",
+    "Density_kg_m3": 7850
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "AISI 329",
+    "Density_kg_m3": 7800
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "304",
+    "Density_kg_m3": 7930
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "440C",
+    "Density_kg_m3": 7620
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "4330",
+    "Density_kg_m3": 7850
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "316L",
+    "Density_kg_m3": 7980
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "4130",
+    "Density_kg_m3": 7850
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "4340",
+    "Density_kg_m3": 7850
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "AISI 304",
+    "Density_kg_m3": 7930
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "302",
+    "Density_kg_m3": 7930
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "S31803",
+    "Density_kg_m3": 7800
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "316",
+    "Density_kg_m3": 7980
+  },
+  {
+    "Matl_Code": "SS",
+    "Alloy": "C465",
+    "Density_kg_m3": 7800
+  },
+  {
+    "Matl_Code": "TI",
+    "Alloy": "Ti-6AL-4V/BSTA11",
+    "Density_kg_m3": 4430
+  }
+]
