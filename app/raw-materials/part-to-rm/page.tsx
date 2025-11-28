@@ -42,7 +42,7 @@ async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
       ...shapeOneHot,
     }
 
-    const res = await fetch("http://127.0.0.1:5000/rm/part-rm", {
+    const res = await fetch("http://localhost:5000/rm/part-rm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

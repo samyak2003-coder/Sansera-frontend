@@ -18,7 +18,7 @@ import { SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/comp
 const items = [
   {
     title: "Machining",
-    url: "#",
+    url: "/machining",
     icon: BadgeDollarSign,
   },
 ]

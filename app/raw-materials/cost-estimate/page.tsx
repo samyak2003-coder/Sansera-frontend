@@ -1,4 +1,5 @@
 "use client"
+
 import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -43,12 +44,12 @@ export default function CostEstimatorPage() {
     shape: "",
   })
 
-  const [predictions, setPredictions] = useState<Record<string, any>>({})
+  const [predictions, setPredictions] = useState<any>(null)
   const [isLoading, setLoading] = useState(false)
   const [autoWeight, setAutoWeight] = useState(true)
-  const [exchangeRate, setExchangeRate] = useState<number | null>(null) // INR per USD
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null)
 
-  // Fetch live USD ↔ INR rate (or fallback)
+  // fetch currency rate
   useEffect(() => {
     async function fetchRate() {
       try {
@@ -56,32 +57,48 @@ export default function CostEstimatorPage() {
         const data = await res.json()
         setExchangeRate(data.rates.INR || 88.5)
       } catch {
-        setExchangeRate(88.5) // fallback
+        setExchangeRate(88.5)
       }
     }
     fetchRate()
   }, [])
 
-  // Prefill from localStorage
+  // Auto volume from predicted dimensions
   useEffect(() => {
     const partRMData = localStorage.getItem("part_rm_data")
-    if (partRMData) {
-      const { volume, shape } = JSON.parse(partRMData)
-      setForm(prev => ({ 
-        ...prev, 
-        volume: parseFloat(volume || "0").toFixed(2),
-        shape: shape || ""
-      }))
+    if (!partRMData) return
+
+    const { predictions, userInputs } = JSON.parse(partRMData)
+    if (!predictions) return
+
+    let volume = 0
+    const shape = userInputs.shape
+
+    const L = predictions.rm_length || 0
+    const W = predictions.rm_width || 0
+    const T = predictions.rm_thickness || 0
+    const dia = predictions.rm_dia || W
+
+    if (shape === "RND") {
+      volume = (Math.PI * dia * dia * L) / 4
+    } else {
+      volume = L * W * (T || 1)
     }
+
+    setForm(prev => ({ ...prev, volume: volume.toFixed(2), shape }))
   }, [])
 
-  // Auto weight calculation
+  // Auto weight calc
   useEffect(() => {
     if (!autoWeight) return
+
     const volumeNum = parseFloat(form.volume || "0")
     const { materialCode, alloy } = form
+
     if (volumeNum && materialCode && alloy) {
-      const entry = densitiesData.find(d => d.Matl_Code === materialCode && d.Alloy === alloy)
+      const entry = densitiesData.find(
+        d => d.Matl_Code === materialCode && d.Alloy === alloy
+      )
       if (entry) {
         const density_kg_in3 = entry.Density_kg_m3 / 61023.7
         const weightPerPart = volumeNum * density_kg_in3
@@ -98,22 +115,22 @@ export default function CostEstimatorPage() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    setPredictions({})
+    setPredictions(null)
 
     try {
       const payload = {
         "Matl. Code": form.materialCode,
-        "Shape": form.shape,
+        "Form": form.shape,
         "Temp": form.temper,
         "Spec": form.spec,
         "Alloy": form.alloy,
-        "Volume(cubic inch)": parseFloat(form.volume || "0"),
-        "Weight/part": parseFloat(form.weightPerPart || "0"),
-        "Qty": parseFloat(form.quantity || "0"),
+        "Volume": parseFloat(form.volume || "0"),
+        "Weight/Part": parseFloat(form.weightPerPart || "0"),
+        "Quantity": parseFloat(form.quantity || "0"),
         "Tonnage": parseFloat(form.weightPerPart || "0") * parseFloat(form.quantity || "0"),
       }
 
-      const res = await fetch("http://127.0.0.1:5000/rm/cost", {
+      const res = await fetch("http://localhost:5000/rm/cost", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -139,6 +156,7 @@ export default function CostEstimatorPage() {
 
         <CardContent>
           <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            
             {/* Spec */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="spec">Specification</Label>
@@ -210,7 +228,7 @@ export default function CostEstimatorPage() {
               <Input id="volume" name="volume" type="number" value={form.volume} onChange={handleChange} />
             </div>
 
-            {/* Weight/Part */}
+            {/* Weight */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="weightPerPart">Weight/Part</Label>
               <Input
@@ -231,41 +249,66 @@ export default function CostEstimatorPage() {
               <Input id="quantity" name="quantity" type="number" value={form.quantity} onChange={handleChange} />
             </div>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <div className="sm:col-span-2 flex justify-center">
               <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
                 {isLoading ? "Loading..." : "Submit"}
               </Button>
             </div>
+
           </form>
 
-          {/* Predictions */}
-         {Object.keys(predictions).length > 0 && (
-  <div className="mt-6">
-    <h2 className="text-lg font-semibold mb-2">Predictions</h2>
-    <ul className="space-y-1">
-      {Object.entries(predictions).map(([key, val]) => {
-        const priceInINR = parseFloat(val)
-        const usdRate = 0.012  // Example: ₹1 = $0.012 (adjust this)
-        const priceInUSD = !isNaN(priceInINR) ? (priceInINR * usdRate).toFixed(2) : null
+          {/* ============================ */}
+          {/*        RESULTS SECTION        */}
+          {/* ============================ */}
 
-        return (
-          <li key={key} className="text-sm">
-            <strong>{key}:</strong>{" "}
-            {priceInUSD ? (
-              <>
-                ₹{priceInINR.toLocaleString("en-IN")} &nbsp;
-                (<span className="text-gray-600">${priceInUSD}</span>)
-              </>
-            ) : (
-              val
-            )}
-          </li>
-        )
-      })}
-    </ul>
-  </div>
-)}
+          {predictions && (
+            <div className="mt-6">
+              <h2 className="text-lg font-semibold mb-2">Predictions</h2>
+
+              {/* Always show predicted price */}
+              {"Predicted_Price/kg" in predictions && (
+                <p className="text-sm mb-4">
+                  <strong>Predicted Price/kg:</strong> ₹
+                  {predictions["Predicted_Price/kg"].toLocaleString("en-IN")}
+                </p>
+              )}
+
+              {/* Show table ONLY if KNN returns rows */}
+              {Array.isArray(predictions?.Nearest_Matching_Rows) &&
+                predictions.Nearest_Matching_Rows.length > 0 && (
+                  <div className="mt-8">
+                    <h2 className="text-lg font-semibold mb-2">Nearest Matching Rows</h2>
+
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full border border-gray-300 text-sm">
+                        <thead className="bg-gray-200">
+                          <tr>
+                            {Object.keys(predictions.Nearest_Matching_Rows[0]).map(col => (
+                              <th key={col} className="border px-3 py-2 text-left font-medium">
+                                {col}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {predictions.Nearest_Matching_Rows.map((row, idx) => (
+                            <tr key={idx} className="hover:bg-gray-100">
+                              {Object.values(row).map((val, i) => (
+                                <td key={i} className="border px-3 py-2">
+                                  {val !== null && val !== undefined ? val.toString() : "-"}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+            </div>
+          )}
 
         </CardContent>
 
